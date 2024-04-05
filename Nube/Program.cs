@@ -1,10 +1,12 @@
-﻿namespace Nube
+﻿using Nube.LexicalAnalysis;
+
+namespace Nube
 {
-    internal class Program
+    public class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            Console.WriteLine("Hello, World!");
+            Lexer l = new Lexer("test");
         }
     }
 }
