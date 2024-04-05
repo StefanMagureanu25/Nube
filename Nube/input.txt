@@ -1,0 +1,6 @@
+﻿fn main(){
+
+	integer a = 3;
+	integer b = a + 5;
+	return 1;
+}

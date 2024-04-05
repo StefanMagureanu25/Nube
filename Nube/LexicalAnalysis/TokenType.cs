@@ -18,7 +18,8 @@ namespace Nube.LexicalAnalysis
             Keywords.BREAK,
             Keywords.TRUE,
             Keywords.FALSE,
-            Keywords.VOID
+            Keywords.VOID,
+            Keywords.RETURN
         };
         public static class Keywords
         {
@@ -36,6 +37,7 @@ namespace Nube.LexicalAnalysis
             public const string TRUE = "true";
             public const string FALSE = "false";
             public const string VOID = "nothing";
+            public const string RETURN = "return";
         }
         public static class Delimiters
         {

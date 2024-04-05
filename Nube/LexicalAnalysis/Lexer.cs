@@ -225,16 +225,20 @@
         public void Analyze(string content)
         {
             readNextCharacter();
-            if (Symbol != (char)0)
+            if (Symbol != (char)0 && Symbol != ' ')
             {
                 Token token = NextToken();
-                Console.WriteLine($"{token.Type} {token.Value}, lungimea: {token.Length}");
+                Console.WriteLine($"{token.Value}, lungimea: {token.Length}");
             }
             while (Symbol != (char)0)
             {
                 readNextCharacter();
+                if(Symbol == ' ')
+                {
+                    continue;
+                }
                 Token token = NextToken();
-                Console.WriteLine($"{token.Type} {token.Value}, lungimea: {token.Length}");
+                Console.WriteLine($"{token.Value}, lungimea: {token.Length}");
             }
         }
     }
