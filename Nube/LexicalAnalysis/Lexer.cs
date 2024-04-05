@@ -14,8 +14,32 @@
             Position = -1;
             NextPosition = 0;
         }
+        // I want to step over \t, ' ', \n, \0 (EOF)
+        private bool stepOver(char c)
+        {
+            if (c == '\n' || c == '\0' || c == '\t' || c == ' ')
+            {
+                return true;
+            }
+            return false;
+        }
+        private string checkKeyword(string value)
+        {
+            foreach (string keyword in TokenType.keywords)
+            {
+                if (value == keyword)
+                {
+                    return keyword;
+                }
+            }
+            return TokenType.IDENT;
+        }
+        private bool isLetter(char ch)
+        {
+            return (ch == '_') || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
+        }
         // Check if I can read the next character next to the lexer position
-        public bool lastCharacter()
+        private bool lastCharacter()
         {
             if (NextPosition == Content.Length)
             {
@@ -24,7 +48,7 @@
             return false;
         }
         // read next character and move the lexer with one position to the right
-        public void readNextCharacter()
+        private void readNextCharacter()
         {
             if (NextPosition >= Content.Length)
             {
@@ -37,7 +61,7 @@
             Position = NextPosition;
             NextPosition++;
         }
-        public Token NextToken()
+        private Token NextToken()
         {
             Token token = new Token();
             switch (Symbol)
@@ -107,14 +131,111 @@
                     break;
                 #endregion
                 default:
-
+                    if (isLetter(Symbol))
+                    {
+                        (token.Type, token.Value, token.Length, token.Position) = checkTokenType();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length, token.Position) = checkNumber();
+                    }
                     break;
             }
             return token;
         }
-        public void analyze(string content)
+        private Token checkTokenType()
         {
-
+            Token token = new Token();
+            string value = "";
+            value += Symbol;
+            while (isLetter(Symbol))
+            {
+                readNextCharacter();
+                if (isLetter(Symbol))
+                {
+                    value += Symbol;
+                }
+            }
+            token.Value = value;
+            token.Length = value.Length;
+            string tokenType = checkKeyword(value);
+            return token;
+        }
+        private Token checkNumber()
+        {
+            Token token = new Token();
+            string value = "";
+            value += Symbol;
+            // ex: 2e-15
+            bool scientificNumber = false;
+            // ex: 2.37
+            bool floatNumber = false;
+            bool hasSign = true;
+            while (Char.IsDigit(Symbol) || scientificNumber == false || floatNumber == false)
+            {
+                readNextCharacter();
+                if (stepOver(Symbol))
+                {
+                    break;
+                }
+                if (scientificNumber && Symbol == 'e')
+                {
+                    token.Type = TokenType.ILLEGAL;
+                    break;
+                }
+                if (floatNumber && Symbol == '.')
+                {
+                    token.Type = TokenType.ILLEGAL;
+                    break;
+                }
+                if (Char.IsDigit(Symbol) == false && Symbol != 'e' && Symbol != '.')
+                {
+                    token.Type = TokenType.ILLEGAL;
+                    break;
+                }
+                if (Symbol == 'e')
+                {
+                    scientificNumber = true;
+                }
+                else if (Symbol == '.')
+                {
+                    floatNumber = true;
+                }
+                value += Symbol;
+            }
+            if (token.Type == TokenType.ILLEGAL)
+            {
+                token.Value = "Programul nu recunoaste acest tip de input!";
+                token.Length = 0;
+            }
+            else if (floatNumber)
+            {
+                token.Value = value;
+                token.Length = value.Length;
+                token.Type = TokenType.FLOAT_CONSTANT;
+            }
+            else
+            {
+                token.Value = value;
+                token.Length = value.Length;
+                token.Type = TokenType.INT_CONSTANT;
+            }
+            return token;
+        }
+        public void Analyze(string content)
+        {
+            readNextCharacter();
+            if (Symbol != (char)0)
+            {
+                Token token = NextToken();
+                Console.WriteLine($"{token.Type} {token.Value}, lungimea: {token.Length}");
+            }
+            while (Symbol != (char)0)
+            {
+                readNextCharacter();
+                Token token = NextToken();
+                Console.WriteLine($"{token.Type} {token.Value}, lungimea: {token.Length}");
+            }
         }
     }
 }

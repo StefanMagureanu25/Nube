@@ -2,12 +2,29 @@
 
 namespace Nube.LexicalAnalysis
 {
-    public class TokenType
+    public static class TokenType
     {
+        public static string[] keywords =
+        {
+            Keywords.INT,
+            Keywords.STRING,
+            Keywords.FLOAT,
+            Keywords.MAIN,
+            Keywords.BOOL,
+            Keywords.FUNCTION,
+            Keywords.IMPORT,
+            Keywords.FOR,
+            Keywords.WHILE,
+            Keywords.BREAK,
+            Keywords.TRUE,
+            Keywords.FALSE,
+            Keywords.VOID
+        };
         public static class Keywords
         {
+
             public const string INT = "integer";
-            public const string DOUBLE = "double";
+            public const string FLOAT = "rational";
             public const string MAIN = "main";
             public const string STRING = "string";
             public const string BOOL = "boolean";
@@ -19,7 +36,6 @@ namespace Nube.LexicalAnalysis
             public const string TRUE = "true";
             public const string FALSE = "false";
             public const string VOID = "nothing";
-            public const string EOF = "null";
         }
         public static class Delimiters
         {
@@ -47,9 +63,11 @@ namespace Nube.LexicalAnalysis
             public const string DIVIDE = "/";
             public const string MOD = "%";
         }
-        public class Identifiers
-        {
-            public string Value { get; set; }
-        }
+        public const string IDENT = "IDENTIFIER";
+        public const string INT_CONSTANT = "INT_CONSTANT";
+        public const string FLOAT_CONSTANT = "FLOAT_CONSTANT";
+        public const string COMMENT = "COMMENT";
+        public const string ILLEGAL = "illegal";
+        public const string EOF = "null";
     }
 }

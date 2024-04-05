@@ -6,7 +6,9 @@ namespace Nube
     {
         static void Main()
         {
-            Lexer l = new Lexer("test");
+            string content = "12e15";
+            Lexer l = new Lexer(content);
+            //l.Analyze(content);
         }
     }
 }
