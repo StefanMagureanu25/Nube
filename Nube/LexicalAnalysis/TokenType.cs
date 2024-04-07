@@ -19,24 +19,27 @@ namespace Nube.LexicalAnalysis
             Keywords.TRUE,
             Keywords.FALSE,
             Keywords.VOID,
-            Keywords.RETURN
+            Keywords.RETURN,
+            Keywords.CHAR,
+            Keywords.IF
         };
         public static class Keywords
         {
-
-            public const string INT = "integer";
-            public const string FLOAT = "rational";
-            public const string MAIN = "main";
             public const string STRING = "string";
             public const string BOOL = "boolean";
+            public const string INT = "int";  // integer
+            public const string CHAR = "char";
+            public const string FLOAT = "rational";
+            public const string MAIN = "main";
             public const string FUNCTION = "fn";
             public const string IMPORT = "import";
+            public const string IF = "if";
             public const string FOR = "for";
             public const string WHILE = "while";
             public const string BREAK = "stop";
             public const string TRUE = "true";
             public const string FALSE = "false";
-            public const string VOID = "nothing";
+            public const string VOID = "void"; // nothing
             public const string RETURN = "return";
         }
         public static class Delimiters
@@ -64,6 +67,10 @@ namespace Nube.LexicalAnalysis
             public const string MULTIPLY = "*";
             public const string DIVIDE = "/";
             public const string MOD = "%";
+            public const string PLUS_PLUS = "++";
+            public const string MINUS_MINUS = "--";
+            public const string AND = "&&";
+            public const string OR = "||";
         }
         public const string IDENT = "IDENTIFIER";
         public const string INT_CONSTANT = "INT_CONSTANT";

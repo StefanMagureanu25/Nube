@@ -14,7 +14,7 @@
             Position = -1;
             NextPosition = 0;
         }
-        // I want to step over \t, ' ', \n, \0 (EOF)
+        // I want to step over \t,\r, ' ', \n, \0 (EOF)
         private bool stepOver(char c)
         {
             if (c == '\n' || c == '\0' || c == '\t' || c == ' ' || c == '\r')
@@ -142,8 +142,15 @@
                     readNextCharacter();
                     break;
                 case '/':
-                    (token.Type, token.Value, token.Length) = (TokenType.Operators.DIVIDE, "/", 1);
                     readNextCharacter();
+                    if (Symbol == '*' || Symbol == '/')
+                    {
+                        (token.Type, token.Value, token.Length, token.Position) = TakeComment();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.DIVIDE, "/", 1);
+                    }
                     break;
                 case '%':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.MOD, "%", 1);
@@ -163,11 +170,61 @@
             }
             return token;
         }
+
+        private Token TakeComment()
+        {
+            Token token = new Token();
+            string value = "";
+            // single line comment
+            if (Symbol == '/')
+            {
+                readNextCharacter();
+                while (Symbol != '\n' && Symbol != '\r')
+                {
+                    value += Symbol;
+                    readNextCharacter();
+                }
+                token.Value = value;
+                token.Length = value.Length;
+                token.Type = TokenType.COMMENT;
+            }
+            // multi-line comment
+            else
+            {
+                bool acceptedComment = false;
+                readNextCharacter();
+                // check until EOF
+                while (Symbol != (char)0)
+                {
+                    value += Symbol;
+                    readNextCharacter();
+                    if (Symbol == '*' && Content[NextPosition] == '/')
+                    {
+                        acceptedComment = true;
+                        // I have to jump over '/' and go to the next character
+                        readNextCharacter();
+                        readNextCharacter();
+                        break;
+                    }
+                }
+                if (acceptedComment)
+                {
+                    token.Value = value;
+                    token.Length = value.Length;
+                    token.Type = TokenType.COMMENT;
+                }
+                else
+                {
+                    token.Type = TokenType.ILLEGAL;
+                }
+            }
+            return token;
+        }
         private Token checkTokenType()
         {
             Token token = new Token();
             string value = "";
-            while (isLetter(Symbol))
+            while (Char.IsLetterOrDigit(Symbol) || Symbol == '_')
             {
                 value += Symbol;
                 readNextCharacter();
