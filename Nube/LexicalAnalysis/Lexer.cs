@@ -17,7 +17,7 @@
         // I want to step over \t, ' ', \n, \0 (EOF)
         private bool stepOver(char c)
         {
-            if (c == '\n' || c == '\0' || c == '\t' || c == ' ')
+            if (c == '\n' || c == '\0' || c == '\t' || c == ' ' || c == '\r')
             {
                 return true;
             }
@@ -69,65 +69,85 @@
                 #region Delimiters Verification
                 case '.':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.DOT, ".", 1);
+                    readNextCharacter();
                     break;
                 case ',':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.COMMA, ",", 1);
+                    readNextCharacter();
                     break;
                 case '(':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.LPAREN, "(", 1);
+                    readNextCharacter();
                     break;
                 case ')':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.RPAREN, ")", 1);
+                    readNextCharacter();
                     break;
                 case ':':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.COLON, ":", 1);
+                    readNextCharacter();
                     break;
                 case '{':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.LBRACE, "{", 1);
+                    readNextCharacter();
                     break;
                 case '}':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.RBRACE, "}", 1);
+                    readNextCharacter();
                     break;
                 case ';':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.SEMICOLON, ";", 1);
+                    readNextCharacter();
                     break;
                 case '[':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.LBRACKET, "[", 1);
+                    readNextCharacter();
                     break;
                 case ']':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.RBRACKET, "]", 1);
+                    readNextCharacter();
                     break;
                 case '"':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.QUOTATION, "\"", 1);
+                    readNextCharacter();
                     break;
                 case '\'':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.APOSTROPHE, "'", 1);
+                    readNextCharacter();
                     break;
                 #endregion
                 #region Operators Verification
                 case '+':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.PLUS, "+", 1);
+                    readNextCharacter();
                     break;
                 case '-':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.MINUS, "-", 1);
+                    readNextCharacter();
                     break;
                 case '=':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.EQUAL, "=", 1);
+                    readNextCharacter();
                     break;
                 case '>':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.GREATER, ">", 1);
+                    readNextCharacter();
                     break;
                 case '<':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.LESS, "<", 1);
+                    readNextCharacter();
                     break;
                 case '*':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.MULTIPLY, "*", 1);
+                    readNextCharacter();
                     break;
                 case '/':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.DIVIDE, "/", 1);
+                    readNextCharacter();
                     break;
                 case '%':
                     (token.Type, token.Value, token.Length) = (TokenType.Operators.MOD, "%", 1);
+                    readNextCharacter();
                     break;
                 #endregion
                 default:
@@ -147,14 +167,10 @@
         {
             Token token = new Token();
             string value = "";
-            value += Symbol;
             while (isLetter(Symbol))
             {
+                value += Symbol;
                 readNextCharacter();
-                if (isLetter(Symbol))
-                {
-                    value += Symbol;
-                }
             }
             token.Value = value;
             token.Length = value.Length;
@@ -165,7 +181,6 @@
         {
             Token token = new Token();
             string value = "";
-            value += Symbol;
             // ex: 2e-15
             bool scientificNumber = false;
             // ex: 2.37
@@ -173,8 +188,7 @@
             bool hasSign = true;
             while (Char.IsDigit(Symbol) || scientificNumber == false || floatNumber == false)
             {
-                readNextCharacter();
-                if (stepOver(Symbol))
+                if (stepOver(Symbol) || Symbol == ';' || Symbol == ',')
                 {
                     break;
                 }
@@ -202,6 +216,7 @@
                     floatNumber = true;
                 }
                 value += Symbol;
+                readNextCharacter();
             }
             if (token.Type == TokenType.ILLEGAL)
             {
@@ -232,9 +247,9 @@
             }
             while (Symbol != (char)0)
             {
-                readNextCharacter();
-                if(Symbol == ' ')
+                if (stepOver(Symbol))
                 {
+                    readNextCharacter();
                     continue;
                 }
                 Token token = NextToken();

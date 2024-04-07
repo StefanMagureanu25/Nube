@@ -4,11 +4,11 @@ namespace Nube
 {
     public class Program
     {
-        static void Main()
+        static void Main(string[] args )
         {
             try
             {
-                using (var file = new StreamReader("D:\\Nube\\Nube\\input.txt"))
+                using (var file = new StreamReader(@"D:\Nube\Nube\input.txt"))
                 {
                     var content = file.ReadToEnd();
                     Lexer l = new Lexer(content);
