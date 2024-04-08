@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace Nube.LexicalAnalysis
 {
@@ -10,6 +11,8 @@ namespace Nube.LexicalAnalysis
         //Actual position for the character we read
         public int NextPosition { get; set; }
         public char Symbol { get; set; }
+        public int StartLine { get; set; } = 1;
+        public int EndLine { get; set; } = 1;
         public Lexer(string content)
         {
             Content = content;
@@ -25,6 +28,13 @@ namespace Nube.LexicalAnalysis
             }
             return false;
         }
+        private void IncrementLine(char c)
+        {
+            if (c == '\n')
+            {
+                EndLine++;
+            }
+        }
         private bool isPartOfNumber(char c)
         {
             return char.IsDigit(c) || c == '.' || c == 'e' || c == 'E' || c == '-' || c == '+';
@@ -35,7 +45,7 @@ namespace Nube.LexicalAnalysis
             {
                 if (value == keyword)
                 {
-                    return keyword;
+                    return TokenType.KEYWORD;
                 }
             }
             return TokenType.IDENT;
@@ -44,15 +54,7 @@ namespace Nube.LexicalAnalysis
         {
             return (ch == '_') || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
         }
-        // Check if I can read the next character next to the lexer position
-        private bool lastCharacter()
-        {
-            if (NextPosition == Content.Length)
-            {
-                return true;
-            }
-            return false;
-        }
+
         // read next character and move the lexer with one position to the right
         private void readNextCharacter()
         {
@@ -63,6 +65,7 @@ namespace Nube.LexicalAnalysis
             else
             {
                 Symbol = Content[NextPosition];
+                IncrementLine(Symbol);
             }
             Position = NextPosition;
             NextPosition++;
@@ -70,6 +73,7 @@ namespace Nube.LexicalAnalysis
         private Token NextToken()
         {
             Token token = new Token();
+            StartLine = EndLine;
             switch (Symbol)
             {
                 #region Delimiters Verification
@@ -340,6 +344,7 @@ namespace Nube.LexicalAnalysis
         }
         private Token TakeString()
         {
+            StartLine = EndLine;
             Token token = new Token();
             string value = "";
             bool acceptedString = false;
@@ -370,6 +375,7 @@ namespace Nube.LexicalAnalysis
         }
         private Token TakeChar()
         {
+            StartLine = EndLine;
             Token token = new Token();
             string value = "";
             bool acceptedChar = false;
@@ -404,6 +410,7 @@ namespace Nube.LexicalAnalysis
         }
         private Token TakeComment()
         {
+            StartLine = EndLine;
             Token token = new Token();
             string value = "";
             // single line comment
@@ -422,6 +429,7 @@ namespace Nube.LexicalAnalysis
             // multi-line comment
             else
             {
+                StartLine = EndLine;
                 bool acceptedComment = false;
                 readNextCharacter();
                 // check until EOF
@@ -453,6 +461,7 @@ namespace Nube.LexicalAnalysis
         }
         private Token checkTokenType()
         {
+            StartLine = EndLine;
             Token token = new Token();
             string value = "";
             while (Char.IsLetterOrDigit(Symbol) || Symbol == '_')
@@ -463,6 +472,7 @@ namespace Nube.LexicalAnalysis
             token.Value = value;
             token.Length = value.Length;
             string tokenType = checkKeyword(value);
+            token.Type = tokenType;
             return token;
         }
         private Token checkNumber()
@@ -478,7 +488,11 @@ namespace Nube.LexicalAnalysis
                 value += Symbol;
                 readNextCharacter();
             }
-
+            if (Symbol == '\n')
+            {
+                EndLine--;
+            }
+            StartLine = EndLine;
             // Match the extracted value against the number pattern
             Match match = Regex.Match(value, numberPattern);
             if (match.Success)
@@ -513,11 +527,6 @@ namespace Nube.LexicalAnalysis
         public void Analyze(string content)
         {
             readNextCharacter();
-            if (Symbol != (char)0 && Symbol != ' ')
-            {
-                Token token = NextToken();
-                Console.WriteLine($"{token.Value}, lungimea: {token.Length}");
-            }
             while (Symbol != (char)0)
             {
                 if (stepOver(Symbol))
@@ -526,7 +535,15 @@ namespace Nube.LexicalAnalysis
                     continue;
                 }
                 Token token = NextToken();
-                Console.WriteLine($"{token.Value}, lungimea: {token.Length}");
+                if (StartLine < EndLine)
+                {
+                    Console.WriteLine($"'{token.Value}', {token.Type}; lungime:{token.Length}; liniile {StartLine}-{EndLine})");
+                }
+                else
+                {
+                    Console.WriteLine($"'{token.Value}', {token.Type}; lungime:{token.Length}; linia {EndLine})");
+                }
+                StartLine = EndLine;
             }
         }
     }
