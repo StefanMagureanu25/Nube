@@ -1,4 +1,6 @@
-﻿namespace Nube.LexicalAnalysis
+﻿using System.Text.RegularExpressions;
+
+namespace Nube.LexicalAnalysis
 {
     public class Lexer
     {
@@ -22,6 +24,10 @@
                 return true;
             }
             return false;
+        }
+        private bool isPartOfNumber(char c)
+        {
+            return char.IsDigit(c) || c == '.' || c == 'e' || c == 'E' || c == '-' || c == '+';
         }
         private string checkKeyword(string value)
         {
@@ -68,8 +74,15 @@
             {
                 #region Delimiters Verification
                 case '.':
-                    (token.Type, token.Value, token.Length) = (TokenType.Delimiters.DOT, ".", 1);
-                    readNextCharacter();
+                    if (Char.IsDigit(Content[NextPosition]))
+                    {
+                        (token.Type, token.Value, token.Length, token.Position) = checkNumber();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Delimiters.DOT, ".", 1);
+                        readNextCharacter();
+                    }
                     break;
                 case ',':
                     (token.Type, token.Value, token.Length) = (TokenType.Delimiters.COMMA, ",", 1);
@@ -108,38 +121,180 @@
                     readNextCharacter();
                     break;
                 case '"':
-                    (token.Type, token.Value, token.Length) = (TokenType.Delimiters.QUOTATION, "\"", 1);
                     readNextCharacter();
+                    if (Symbol != '"')
+                    {
+                        (token.Type, token.Value, token.Length, token.Position) = TakeString();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.STRING_CONSTANT, "", 0);
+                        readNextCharacter();
+                    }
                     break;
                 case '\'':
-                    (token.Type, token.Value, token.Length) = (TokenType.Delimiters.APOSTROPHE, "'", 1);
                     readNextCharacter();
+                    if (Symbol != '\'')
+                    {
+                        (token.Type, token.Value, token.Length, token.Position) = TakeChar();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.CHAR_CONSTANT, "", 0);
+                        readNextCharacter();
+                    }
                     break;
                 #endregion
                 #region Operators Verification
-                case '+':
-                    (token.Type, token.Value, token.Length) = (TokenType.Operators.PLUS, "+", 1);
+                case '!':
                     readNextCharacter();
+                    if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.NOT_EQUAL, "!=", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.NOT, "!", 1);
+                    }
+                    break;
+                case '&':
+                    readNextCharacter();
+                    if (Symbol == '&')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.AND, "&&", 2);
+                        readNextCharacter();
+                    }
+                    else if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.BITWISE_AND_EQUAL, "&=", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.BITWISE_AND, "&", 1);
+                    }
+                    break;
+                case '|':
+                    readNextCharacter();
+                    if (Symbol == '|')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.OR, "||", 2);
+                        readNextCharacter();
+                    }
+                    else if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.BITWISE_OR_EQUAL, "|=", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.BITWISE_OR, "|", 1);
+                    }
+                    break;
+                case '^':
+                    readNextCharacter();
+                    if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.BITWISE_XOR_EQUAL, "^=", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.BITWISE_XOR, "^", 1);
+                    }
+                    break;
+                case '+':
+                    readNextCharacter();
+                    if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.PLUS_EQUAL, "+=", 2);
+                        readNextCharacter();
+                    }
+                    else if (Symbol == '+')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.PLUS_PLUS, "++", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.PLUS, "+", 1);
+                    }
                     break;
                 case '-':
-                    (token.Type, token.Value, token.Length) = (TokenType.Operators.MINUS, "-", 1);
                     readNextCharacter();
+                    if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.MINUS_EQUAL, "-=", 2);
+                        readNextCharacter();
+                    }
+                    else if (Symbol == '-')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.MINUS_MINUS, "--", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.MINUS, "-", 1);
+                    }
                     break;
                 case '=':
-                    (token.Type, token.Value, token.Length) = (TokenType.Operators.EQUAL, "=", 1);
                     readNextCharacter();
+                    if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.EQUAL_EQUAL, "==", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.EQUAL, "=", 1);
+                    }
                     break;
                 case '>':
-                    (token.Type, token.Value, token.Length) = (TokenType.Operators.GREATER, ">", 1);
                     readNextCharacter();
+                    if (Symbol == '>')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.RIGHT_SHIFT, ">>", 2);
+                        readNextCharacter();
+                    }
+                    else if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.GREATER_EQUAL, ">=", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.GREATER, ">", 1);
+                    }
                     break;
                 case '<':
-                    (token.Type, token.Value, token.Length) = (TokenType.Operators.LESS, "<", 1);
                     readNextCharacter();
+                    if (Symbol == '<')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.LEFT_SHIFT, "<<", 2);
+                        readNextCharacter();
+                    }
+                    else if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.LESS_EQUAL, "<=", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.LESS, "<", 1);
+                    }
                     break;
                 case '*':
-                    (token.Type, token.Value, token.Length) = (TokenType.Operators.MULTIPLY, "*", 1);
                     readNextCharacter();
+                    if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.MULTIPLY_EQUAL, "*=", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.MULTIPLY, "*", 1);
+                    }
                     break;
                 case '/':
                     readNextCharacter();
@@ -147,14 +302,27 @@
                     {
                         (token.Type, token.Value, token.Length, token.Position) = TakeComment();
                     }
+                    else if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.DIVIDE_EQUAL, "/=", 2);
+                        readNextCharacter();
+                    }
                     else
                     {
                         (token.Type, token.Value, token.Length) = (TokenType.Operators.DIVIDE, "/", 1);
                     }
                     break;
                 case '%':
-                    (token.Type, token.Value, token.Length) = (TokenType.Operators.MOD, "%", 1);
                     readNextCharacter();
+                    if (Symbol == '=')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.MOD_EQUAL, "/=", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.Operators.MOD, "%", 1);
+                    }
                     break;
                 #endregion
                 default:
@@ -170,7 +338,70 @@
             }
             return token;
         }
-
+        private Token TakeString()
+        {
+            Token token = new Token();
+            string value = "";
+            bool acceptedString = false;
+            // check until EOF
+            while (Symbol != (char)0)
+            {
+                value += Symbol;
+                readNextCharacter();
+                if (Symbol == '"')
+                {
+                    acceptedString = true;
+                    // I have to jump over "
+                    readNextCharacter();
+                    break;
+                }
+            }
+            if (acceptedString)
+            {
+                token.Value = value;
+                token.Length = value.Length;
+                token.Type = TokenType.STRING_CONSTANT;
+            }
+            else
+            {
+                token.Type = TokenType.ILLEGAL;
+            }
+            return token;
+        }
+        private Token TakeChar()
+        {
+            Token token = new Token();
+            string value = "";
+            bool acceptedChar = false;
+            while (Symbol != (char)0)
+            {
+                value += Symbol;
+                if (value.Length > 1)
+                {
+                    // Char can't have length bigger than 1
+                    break;
+                }
+                readNextCharacter();
+                if (Symbol == '\'')
+                {
+                    acceptedChar = true;
+                    // I have to jump over '
+                    readNextCharacter();
+                    break;
+                }
+            }
+            if (acceptedChar)
+            {
+                token.Value = value;
+                token.Length = value.Length;
+                token.Type = TokenType.CHAR_CONSTANT;
+            }
+            else
+            {
+                token.Type = TokenType.ILLEGAL;
+            }
+            return token;
+        }
         private Token TakeComment()
         {
             Token token = new Token();
@@ -196,8 +427,6 @@
                 // check until EOF
                 while (Symbol != (char)0)
                 {
-                    value += Symbol;
-                    readNextCharacter();
                     if (Symbol == '*' && Content[NextPosition] == '/')
                     {
                         acceptedComment = true;
@@ -206,6 +435,8 @@
                         readNextCharacter();
                         break;
                     }
+                    value += Symbol;
+                    readNextCharacter();
                 }
                 if (acceptedComment)
                 {
@@ -238,59 +469,44 @@
         {
             Token token = new Token();
             string value = "";
-            // ex: 2e-15
-            bool scientificNumber = false;
-            // ex: 2.37
-            bool floatNumber = false;
-            bool hasSign = true;
-            while (Char.IsDigit(Symbol) || scientificNumber == false || floatNumber == false)
+
+            // Regex pattern to recognize numbers
+            string numberPattern = @"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?";
+
+            while (Symbol != '\n' && Symbol != ' ' && Symbol != (char)0)
             {
-                if (stepOver(Symbol) || Symbol == ';' || Symbol == ',')
-                {
-                    break;
-                }
-                if (scientificNumber && Symbol == 'e')
-                {
-                    token.Type = TokenType.ILLEGAL;
-                    break;
-                }
-                if (floatNumber && Symbol == '.')
-                {
-                    token.Type = TokenType.ILLEGAL;
-                    break;
-                }
-                if (Char.IsDigit(Symbol) == false && Symbol != 'e' && Symbol != '.')
-                {
-                    token.Type = TokenType.ILLEGAL;
-                    break;
-                }
-                if (Symbol == 'e')
-                {
-                    scientificNumber = true;
-                }
-                else if (Symbol == '.')
-                {
-                    floatNumber = true;
-                }
                 value += Symbol;
                 readNextCharacter();
             }
-            if (token.Type == TokenType.ILLEGAL)
+
+            // Match the extracted value against the number pattern
+            Match match = Regex.Match(value, numberPattern);
+            if (match.Success)
             {
-                token.Value = "Programul nu recunoaste acest tip de input!";
-                token.Length = 0;
-            }
-            else if (floatNumber)
-            {
-                token.Value = value;
-                token.Length = value.Length;
-                token.Type = TokenType.FLOAT_CONSTANT;
+                token.Value = match.Value;
+                token.Length = match.Length;
+                int startIndex = match.Index;
+                // Take the index of the next character after the number
+                Position = Position - value.Length + match.Length;
+                NextPosition = Position + 1;
+                if (Position < Content.Length)
+                {
+                    Symbol = Content[Position];
+                }
+                if (token.Value.Contains(".") || token.Value.Contains("e") || token.Value.Contains("E"))
+                {
+                    token.Type = TokenType.FLOAT_CONSTANT;
+                }
+                else
+                {
+                    token.Type = TokenType.INT_CONSTANT;
+                }
             }
             else
             {
-                token.Value = value;
-                token.Length = value.Length;
-                token.Type = TokenType.INT_CONSTANT;
+                token.Value = "Programul nu recunoaste acest tip de input!";
+                token.Length = 0;
+                token.Type = TokenType.ILLEGAL;
             }
             return token;
         }

@@ -61,20 +61,48 @@ namespace Nube.LexicalAnalysis
         {
             public const string PLUS = "+";
             public const string MINUS = "-";
-            public const string EQUAL = "=";
-            public const string GREATER = ">";
-            public const string LESS = "<";
             public const string MULTIPLY = "*";
             public const string DIVIDE = "/";
             public const string MOD = "%";
+
+            public const string EQUAL = "=";
+            public const string GREATER = ">";
+            public const string LESS = "<";
+            public const string NOT = "!";
+
             public const string PLUS_PLUS = "++";
             public const string MINUS_MINUS = "--";
+            public const string LEFT_SHIFT = "<<";
+            public const string RIGHT_SHIFT = ">>";
             public const string AND = "&&";
             public const string OR = "||";
+
+            public const string BITWISE_AND = "&";
+            public const string BITWISE_XOR = "^";
+            public const string BITWISE_OR = "|";
+
+
+            public const string PLUS_EQUAL = "+=";
+            public const string MINUS_EQUAL = "-=";
+            public const string MULTIPLY_EQUAL = "*=";
+            public const string DIVIDE_EQUAL = "/=";
+            public const string MOD_EQUAL = "%=";
+
+            public const string EQUAL_EQUAL = "==";
+            public const string LESS_EQUAL = "<=";
+            public const string GREATER_EQUAL = ">=";
+            public const string NOT_EQUAL = "!=";
+
+            public const string BITWISE_AND_EQUAL = "&=";
+            public const string BITWISE_XOR_EQUAL = "^=";
+            public const string BITWISE_OR_EQUAL = "|=";
+
         }
         public const string IDENT = "IDENTIFIER";
         public const string INT_CONSTANT = "INT_CONSTANT";
         public const string FLOAT_CONSTANT = "FLOAT_CONSTANT";
+        public const string CHAR_CONSTANT = "CHAR_CONSTANT";
+        public const string STRING_CONSTANT = "STRING_CONSTANT";
         public const string COMMENT = "COMMENT";
         public const string ILLEGAL = "illegal";
         public const string EOF = "null";
