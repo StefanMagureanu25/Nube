@@ -35,10 +35,6 @@ namespace Nube.LexicalAnalysis
                 EndLine++;
             }
         }
-        private bool isPartOfNumber(char c)
-        {
-            return char.IsDigit(c) || c == '.' || c == 'e' || c == 'E' || c == '-' || c == '+';
-        }
         private string checkKeyword(string value)
         {
             foreach (string keyword in TokenType.keywords)
@@ -480,7 +476,6 @@ namespace Nube.LexicalAnalysis
             Token token = new Token();
             string value = "";
 
-            // Regex pattern to recognize numbers
             string numberPattern = @"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?";
 
             while (Symbol != '\n' && Symbol != ' ' && Symbol != (char)0)
@@ -499,7 +494,6 @@ namespace Nube.LexicalAnalysis
             {
                 token.Value = match.Value;
                 token.Length = match.Length;
-                int startIndex = match.Index;
                 // Take the index of the next character after the number
                 Position = Position - value.Length + match.Length;
                 NextPosition = Position + 1;
@@ -537,11 +531,11 @@ namespace Nube.LexicalAnalysis
                 Token token = NextToken();
                 if (StartLine < EndLine)
                 {
-                    Console.WriteLine($"'{token.Value}', {token.Type}; lungime:{token.Length}; liniile {StartLine}-{EndLine})");
+                    Console.WriteLine($"'{token.Value}', {token.Type}; {token.Length}; liniile {StartLine}-{EndLine})");
                 }
                 else
                 {
-                    Console.WriteLine($"'{token.Value}', {token.Type}; lungime:{token.Length}; linia {EndLine})");
+                    Console.WriteLine($"'{token.Value}', {token.Type}; {token.Length}; linia {EndLine})");
                 }
                 StartLine = EndLine;
             }
