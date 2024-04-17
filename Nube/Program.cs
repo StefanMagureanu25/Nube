@@ -10,9 +10,14 @@ namespace Nube
             {
                 using (var file = new StreamReader(@"D:\Nube\Nube\input.txt"))
                 {
-                    var content = file.ReadToEnd();
-                    Lexer l = new Lexer(content);
-                    l.Analyze(content);
+                    Lexer l = new Lexer();
+                    string contentLine;
+                    while ((contentLine = file.ReadLine()) != null)
+                    {
+                        l.Content = contentLine;
+                        l.Analyze(l.Content);
+                        l.NextLine();
+                    }
                 }
             }
             catch (FileNotFoundException)

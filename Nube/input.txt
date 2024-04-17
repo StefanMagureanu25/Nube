@@ -1,5 +1,12 @@
 ﻿import io;
 
+/*	unsigned int = natural
+	int = integer
+	float/double = real
+	string
+	char
+	*/
+
 PI_NUMBER :: const real = 3.14;
 
 fn suma(a :: int, b :: int) integer
@@ -32,8 +39,9 @@ fn main() integer
 	produs(x_coord, suma(y_coord, PI_NUMBER));
 	sum_coord :: integer = suma(suma(x_coord, y_coord), product(x_coord, y_coord));
 	quadruple_x_coord:: integer = double(double(x_coord));
+	y :: natural = 4;
 	x = 3;
-	(comment) eroare, deoarece nu a fost declarat un tip pentru x. Poate adaug un sistem de sugestii pentru ce tip ar putea pune ca si warning instead.
+	// eroare, deoarece nu a fost declarat un tip pentru x. Poate adaug un sistem de sugestii pentru ce tip ar putea pune ca si warning instead.
 	gasit :: boolean = false;
 	a :: integer = 5;
 	b :: integer[] = [1,3..]
@@ -47,7 +55,7 @@ fn main() integer
 			stop; // stop = break. continue o sa ramana la fel
 		}
 	}
-	if gasit == false
+	if gasit == false and y == 4
 	{
 		io.write("Elementul nu a putut fi gasit!!\n");
 	}
