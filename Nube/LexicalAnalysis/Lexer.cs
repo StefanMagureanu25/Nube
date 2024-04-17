@@ -34,6 +34,7 @@ namespace Nube.LexicalAnalysis
 
             "return"
         };
+        private bool isComment = false;
         public string Content { get; set; }
         //Position where the finite automata(lexer) is situated
         public int Position { get; set; }
@@ -165,8 +166,13 @@ namespace Nube.LexicalAnalysis
                     return TokenType.INVALID;
             }
         }
-        private Token NextToken()
+        private Token? NextToken()
         {
+            if (isComment == true)
+            {
+                ConsumeComment();
+                return null;
+            }
             Token token = new Token();
             switch (Symbol)
             {
@@ -195,8 +201,16 @@ namespace Nube.LexicalAnalysis
                     readNextCharacter();
                     break;
                 case ':':
-                    (token.Type, token.Value, token.Length) = (TokenType.COLON, ":", 1);
                     readNextCharacter();
+                    if (Symbol == ':')
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.DECLARATIVE, "::", 2);
+                        readNextCharacter();
+                    }
+                    else
+                    {
+                        (token.Type, token.Value, token.Length) = (TokenType.COLON, ":", 1);
+                    }
                     break;
                 case '{':
                     (token.Type, token.Value, token.Length) = (TokenType.LBRACE, "{", 1);
@@ -243,6 +257,7 @@ namespace Nube.LexicalAnalysis
                     }
                     break;
                 #endregion
+
                 #region Operators Verification
                 case '!':
                     readNextCharacter();
@@ -393,7 +408,9 @@ namespace Nube.LexicalAnalysis
                     readNextCharacter();
                     if (Symbol == '*' || Symbol == '/')
                     {
-                        (token.Type, token.Value, token.Length, token.Line, token.Position) = TakeComment();
+                        isComment = true;
+                        ConsumeComment();
+                        return null;
                     }
                     else if (Symbol == '=')
                     {
@@ -418,6 +435,8 @@ namespace Nube.LexicalAnalysis
                     }
                     break;
                 #endregion
+
+                #region Keywords and Identifiers
                 default:
                     if (isLetter(Symbol))
                     {
@@ -428,9 +447,13 @@ namespace Nube.LexicalAnalysis
                         (token.Type, token.Value, token.Length, token.Line, token.Position) = checkNumber();
                     }
                     break;
+                    #endregion
             }
-            token.Position = Position - token.Value.Length + 1;
-            token.Line = Line;
+            if (token.Value != null)
+            {
+                token.Position = Position - token.Value.Length + 1;
+                token.Line = Line;
+            }
             return token;
         }
         private Token TakeString()
@@ -497,54 +520,34 @@ namespace Nube.LexicalAnalysis
             }
             return token;
         }
-        private Token TakeComment()
+        private void ConsumeComment()
         {
-            Token token = new Token();
-            string value = "";
             // single line comment
             if (Symbol == '/')
             {
-                readNextCharacter();
-                while (Symbol != '\n' && Symbol != '\r')
+                while (Symbol != '\0')
                 {
-                    value += Symbol;
                     readNextCharacter();
                 }
-                token.Value = value;
-                token.Length = value.Length;
-                token.Type = TokenType.COMMENT;
+                isComment = false;
             }
             // multi-line comment
-            else
+            else if (Symbol == '*' || isComment == true)
             {
-                bool acceptedComment = false;
                 readNextCharacter();
                 // check until EOF
                 while (Symbol != (char)0)
                 {
-                    if (Symbol == '*' && Content[NextPosition] == '/')
+                    if (Symbol == '/' && Content[Position - 1] == '*')
                     {
-                        acceptedComment = true;
+                        isComment = false;
                         // I have to jump over '/' and go to the next character
-                        readNextCharacter();
                         readNextCharacter();
                         break;
                     }
-                    value += Symbol;
                     readNextCharacter();
                 }
-                if (acceptedComment)
-                {
-                    token.Value = value;
-                    token.Length = value.Length;
-                    token.Type = TokenType.COMMENT;
-                }
-                else
-                {
-                    token.Type = TokenType.INVALID;
-                }
             }
-            return token;
         }
         private Token checkTokenType()
         {
@@ -599,6 +602,10 @@ namespace Nube.LexicalAnalysis
                 {
                     token.Type = TokenType.REAL;
                 }
+                else if (token.Value.Contains("-") == false)
+                {
+                    token.Type = TokenType.NATURAL;
+                }
                 else
                 {
                     token.Type = TokenType.INTEGER;
@@ -623,7 +630,10 @@ namespace Nube.LexicalAnalysis
                     continue;
                 }
                 Token token = NextToken();
-                Console.WriteLine(token.ToString());
+                if (token != null)
+                {
+                    Console.WriteLine(token.ToString());
+                }
             }
         }
     }

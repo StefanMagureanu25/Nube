@@ -92,8 +92,7 @@
         #endregion
 
         #region Extra
-        INVALID,
-        COMMENT
+        INVALID
         #endregion
     }
 }
