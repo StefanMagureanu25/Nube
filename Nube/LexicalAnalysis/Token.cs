@@ -6,9 +6,17 @@ namespace Nube.LexicalAnalysis
         public TokenType Type { get; set; }
         public string Value { get; set; }
         public int Length { get; set; }
-        public int Position { get; set; } = 0;
-        public int Line { get; set; } = 0;
+        public int Position { get; set; }
+        public int Line { get; set; }
 
+        public Token()
+        {
+            Length = 0;
+            Position = 0;
+            Line = 0;
+            Value = "";
+            Type = TokenType.INVALID;
+        }
         public void Deconstruct(out TokenType type, out string value, out int length, out int line, out int position)
         {
             type = Type;

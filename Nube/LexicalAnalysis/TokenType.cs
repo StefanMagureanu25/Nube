@@ -92,7 +92,8 @@
         #endregion
 
         #region Extra
-        INVALID
+        INVALID,
+        EOF
         #endregion
     }
 }

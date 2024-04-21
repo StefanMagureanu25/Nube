@@ -33,6 +33,7 @@ fn double(number :: integer) integer
 // daca era fn main() void nu trebuia sa returneze nimic
 fn main() integer 
 {
+	sir :: string = "test";
 	x_coord :: real, y_coord :: real;
 	io.read(x_coord, y_coord);
 	produs(PI_NUMBER, x_coord);

@@ -5,35 +5,8 @@ namespace Nube.LexicalAnalysis
 {
     public class Lexer
     {
-        public static string[] keywords =
-        {
-            "string",
-            "boolean",
-            "integer",
-            "char",
-            "real",
-            "natural",
-            "nothing",
-
-            "main",
-            "fn",
-            "import",
-
-            "if",
-            "for",
-            "while",
-
-            "stop",
-            "continue",
-
-            "true",
-            "false",
-
-            "or",
-            "and",
-
-            "return"
-        };
+        #region Properties & Constructors
+        private static Dictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>();
         private bool isComment = false;
         public string Content { get; set; }
         //Position where the finite automata(lexer) is situated
@@ -50,7 +23,11 @@ namespace Nube.LexicalAnalysis
         {
             Position = -1;
             NextPosition = 0;
+            addKeywords();
         }
+        #endregion
+
+        #region Helpful methods for finite state automaton traversal
         public void ResetPosition()
         {
             Position = -1;
@@ -65,7 +42,6 @@ namespace Nube.LexicalAnalysis
             ResetPosition();
             AddLine();
         }
-        // I want to step over \t,\r, ' ', \n, \0 (EOF)
         private bool stepOver(char c)
         {
             if (c == '\n' || c == '\0' || c == '\t' || c == ' ' || c == '\r')
@@ -74,23 +50,216 @@ namespace Nube.LexicalAnalysis
             }
             return false;
         }
-        private bool checkKeyword(string value)
+        #endregion
+
+        #region Extra methods for defining my tokens' rules
+        private void addKeywords()
         {
-            foreach (string keyword in keywords)
+            _keywords.Add("string", TokenType.STRING);
+            _keywords.Add("boolean", TokenType.BOOLEAN);
+            _keywords.Add("integer", TokenType.INTEGER);
+            _keywords.Add("char", TokenType.CHAR);
+            _keywords.Add("real", TokenType.REAL);
+            _keywords.Add("natural", TokenType.NATURAL);
+            _keywords.Add("nothing", TokenType.NOTHING);
+            _keywords.Add("null", TokenType.NULL);
+
+            _keywords.Add("main", TokenType.MAIN);
+            _keywords.Add("fn", TokenType.FN);
+            _keywords.Add("import", TokenType.IMPORT);
+
+            _keywords.Add("if", TokenType.IF);
+            _keywords.Add("for", TokenType.FOR);
+            _keywords.Add("while", TokenType.WHILE);
+
+            _keywords.Add("stop", TokenType.STOP);
+            _keywords.Add("continue", TokenType.CONTINUE);
+
+            _keywords.Add("true", TokenType.TRUE);
+            _keywords.Add("false", TokenType.FALSE);
+
+            _keywords.Add("to", TokenType.TO);
+            _keywords.Add("step", TokenType.STEP);
+
+            _keywords.Add("return", TokenType.RETURN);
+        }
+        private TokenType checkKeyword(string value)
+        {
+            TokenType tokenType;
+            if (_keywords.TryGetValue(value, out tokenType))
+                return tokenType;
+
+            if (value == "or")
             {
-                if (value == keyword)
-                {
-                    return true;
-                }
+                tokenType = TokenType.OR;
             }
-            return false;
+            else if (value == "and")
+            {
+                tokenType = TokenType.AND;
+            }
+            else
+            {
+                tokenType = TokenType.IDENTIFIER;
+            }
+            return tokenType;
+        }
+        private bool isDigit(char ch)
+        {
+            return ch >= '0' && ch <= '9';
         }
         private bool isLetter(char ch)
         {
             return (ch == '_') || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
         }
+        private bool isAlphaNumeric(char ch)
+        {
+            return isDigit(ch) || isLetter(ch);
+        }
+        #endregion
 
-        // read next character and move the lexer with one position to the right
+        #region Token recognition
+        private Token takeString()
+        {
+            Token token = new Token();
+            bool acceptedString = false;
+            // check until EOF
+            while (Symbol != (char)0)
+            {
+                token.Value += Symbol;
+                readNextCharacter();
+                if (Symbol == '"')
+                {
+                    acceptedString = true;
+                    // I have to jump over "
+                    readNextCharacter();
+                    break;
+                }
+            }
+            if (acceptedString)
+            {
+                token.Length = token.Value.Length;
+                token.Type = TokenType.STRING;
+            }
+            return token;
+        }
+        private Token takeChar()
+        {
+            Token token = new Token();
+            bool acceptedChar = false;
+            while (Symbol != (char)0)
+            {
+                token.Value += Symbol;
+                if (token.Value.Length > 1)
+                {
+                    // Char can't have length bigger than 1
+                    break;
+                }
+                readNextCharacter();
+                if (Symbol == '\'')
+                {
+                    acceptedChar = true;
+                    // I have to jump over '
+                    readNextCharacter();
+                    break;
+                }
+            }
+            if (acceptedChar)
+            {
+                token.Length = token.Value.Length;
+                token.Type = TokenType.CHAR;
+            }
+            return token;
+        }
+        private void consumeComment()
+        {
+            // single line comment
+            if (Symbol == '/')
+            {
+                while (Symbol != '\0')
+                {
+                    readNextCharacter();
+                }
+                isComment = false;
+            }
+            // multi-line comment
+            else if (Symbol == '*' || isComment == true)
+            {
+                readNextCharacter();
+                // check until EOF
+                while (Symbol != (char)0)
+                {
+                    if (Symbol == '/' && Content[Position - 1] == '*')
+                    {
+                        isComment = false;
+                        // I have to jump over '/' and go to the next character
+                        readNextCharacter();
+                        break;
+                    }
+                    readNextCharacter();
+                }
+            }
+        }
+        private Token checkTokenType()
+        {
+            Token token = new Token();
+            while (isAlphaNumeric(Symbol))
+            {
+                token.Value += Symbol;
+                readNextCharacter();
+            }
+            token.Length = token.Value.Length;
+            token.Type = checkKeyword(token.Value);
+            return token;
+        }
+        private Token checkNumber()
+        {
+            Token token = new Token();
+            string value = "";
+
+            string numberPattern = @"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?";
+
+            while (Symbol != '\n' && Symbol != ' ' && Symbol != (char)0)
+            {
+                value += Symbol;
+                readNextCharacter();
+            }
+            // Match the extracted value against the number pattern
+            Match match = Regex.Match(value, numberPattern);
+            if (match.Success)
+            {
+                token.Value = match.Value;
+                token.Length = match.Length;
+                // Take the index of the next character after the number
+                Position = Position - value.Length + match.Length;
+                NextPosition = Position + 1;
+                if (Position < Content.Length)
+                {
+                    Symbol = Content[Position];
+                }
+                if (token.Value.Contains(".") || token.Value.Contains("e") || token.Value.Contains("E"))
+                {
+                    token.Type = TokenType.REAL;
+                }
+                else if (token.Value.Contains("-") == false)
+                {
+                    token.Type = TokenType.NATURAL;
+                }
+                else
+                {
+                    token.Type = TokenType.INTEGER;
+                }
+            }
+            else
+            {
+                token.Value = "Programul nu recunoaste acest tip de input!";
+                token.Length = 0;
+                token.Type = TokenType.INVALID;
+            }
+            return token;
+        }
+        #endregion
+
+        #region Automaton traversal
         private void readNextCharacter()
         {
             if (NextPosition >= Content.Length)
@@ -104,73 +273,11 @@ namespace Nube.LexicalAnalysis
             Position = NextPosition;
             NextPosition++;
         }
-        private TokenType KeywordType(string keyword)
-        {
-            switch (keyword)
-            {
-                case "string":
-                    return TokenType.STRING;
-                case "boolean":
-                    return TokenType.BOOLEAN;
-                case "integer":
-                    return TokenType.INTEGER;
-                case "char":
-                    return TokenType.CHAR;
-                case "real":
-                    return TokenType.REAL;
-                case "natural":
-                    return TokenType.NATURAL;
-                case "nothing":
-                    return TokenType.NOTHING;
-                case "null":
-                    return TokenType.NULL;
-
-                case "main":
-                    return TokenType.MAIN;
-                case "fn":
-                    return TokenType.FN;
-                case "import":
-                    return TokenType.IMPORT;
-
-                case "if":
-                    return TokenType.IF;
-                case "for":
-                    return TokenType.FOR;
-                case "while":
-                    return TokenType.WHILE;
-
-                case "stop":
-                    return TokenType.STOP;
-                case "continue":
-                    return TokenType.CONTINUE;
-
-                case "true":
-                    return TokenType.TRUE;
-                case "false":
-                    return TokenType.FALSE;
-
-                case "or":
-                    return TokenType.OR;
-                case "and":
-                    return TokenType.AND;
-
-                case "return":
-                    return TokenType.RETURN;
-
-                case "to":
-                    return TokenType.TO;
-                case "step":
-                    return TokenType.STEP;
-
-                default:
-                    return TokenType.INVALID;
-            }
-        }
         private Token? NextToken()
         {
             if (isComment == true)
             {
-                ConsumeComment();
+                consumeComment();
                 return null;
             }
             Token token = new Token();
@@ -236,7 +343,7 @@ namespace Nube.LexicalAnalysis
                     readNextCharacter();
                     if (Symbol != '"')
                     {
-                        (token.Type, token.Value, token.Length, token.Line, token.Position) = TakeString();
+                        (token.Type, token.Value, token.Length, token.Line, token.Position) = takeString();
                     }
                     else
                     {
@@ -248,7 +355,7 @@ namespace Nube.LexicalAnalysis
                     readNextCharacter();
                     if (Symbol != '\'')
                     {
-                        (token.Type, token.Value, token.Length, token.Line, token.Position) = TakeChar();
+                        (token.Type, token.Value, token.Length, token.Line, token.Position) = takeChar();
                     }
                     else
                     {
@@ -409,7 +516,7 @@ namespace Nube.LexicalAnalysis
                     if (Symbol == '*' || Symbol == '/')
                     {
                         isComment = true;
-                        ConsumeComment();
+                        consumeComment();
                         return null;
                     }
                     else if (Symbol == '=')
@@ -456,169 +563,6 @@ namespace Nube.LexicalAnalysis
             }
             return token;
         }
-        private Token TakeString()
-        {
-            Token token = new Token();
-            string value = "";
-            bool acceptedString = false;
-            // check until EOF
-            while (Symbol != (char)0)
-            {
-                value += Symbol;
-                readNextCharacter();
-                if (Symbol == '"')
-                {
-                    acceptedString = true;
-                    // I have to jump over "
-                    readNextCharacter();
-                    break;
-                }
-            }
-            if (acceptedString)
-            {
-                token.Value = value;
-                token.Length = value.Length;
-                token.Type = TokenType.STRING;
-            }
-            else
-            {
-                token.Type = TokenType.INVALID;
-            }
-            return token;
-        }
-        private Token TakeChar()
-        {
-            Token token = new Token();
-            string value = "";
-            bool acceptedChar = false;
-            while (Symbol != (char)0)
-            {
-                value += Symbol;
-                if (value.Length > 1)
-                {
-                    // Char can't have length bigger than 1
-                    break;
-                }
-                readNextCharacter();
-                if (Symbol == '\'')
-                {
-                    acceptedChar = true;
-                    // I have to jump over '
-                    readNextCharacter();
-                    break;
-                }
-            }
-            if (acceptedChar)
-            {
-                token.Value = value;
-                token.Length = value.Length;
-                token.Type = TokenType.CHAR;
-            }
-            else
-            {
-                token.Type = TokenType.INVALID;
-            }
-            return token;
-        }
-        private void ConsumeComment()
-        {
-            // single line comment
-            if (Symbol == '/')
-            {
-                while (Symbol != '\0')
-                {
-                    readNextCharacter();
-                }
-                isComment = false;
-            }
-            // multi-line comment
-            else if (Symbol == '*' || isComment == true)
-            {
-                readNextCharacter();
-                // check until EOF
-                while (Symbol != (char)0)
-                {
-                    if (Symbol == '/' && Content[Position - 1] == '*')
-                    {
-                        isComment = false;
-                        // I have to jump over '/' and go to the next character
-                        readNextCharacter();
-                        break;
-                    }
-                    readNextCharacter();
-                }
-            }
-        }
-        private Token checkTokenType()
-        {
-            TokenType tokenType;
-            Token token = new Token();
-            string value = "";
-            while (Char.IsLetterOrDigit(Symbol) || Symbol == '_')
-            {
-                value += Symbol;
-                readNextCharacter();
-            }
-            token.Value = value;
-            token.Length = value.Length;
-            bool isKeyword = checkKeyword(value);
-            if (isKeyword == true)
-            {
-                tokenType = KeywordType(value);
-            }
-            else
-            {
-                tokenType = TokenType.IDENTIFIER;
-            }
-            token.Type = tokenType;
-            return token;
-        }
-        private Token checkNumber()
-        {
-            Token token = new Token();
-            string value = "";
-
-            string numberPattern = @"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?";
-
-            while (Symbol != '\n' && Symbol != ' ' && Symbol != (char)0)
-            {
-                value += Symbol;
-                readNextCharacter();
-            }
-            // Match the extracted value against the number pattern
-            Match match = Regex.Match(value, numberPattern);
-            if (match.Success)
-            {
-                token.Value = match.Value;
-                token.Length = match.Length;
-                // Take the index of the next character after the number
-                Position = Position - value.Length + match.Length;
-                NextPosition = Position + 1;
-                if (Position < Content.Length)
-                {
-                    Symbol = Content[Position];
-                }
-                if (token.Value.Contains(".") || token.Value.Contains("e") || token.Value.Contains("E"))
-                {
-                    token.Type = TokenType.REAL;
-                }
-                else if (token.Value.Contains("-") == false)
-                {
-                    token.Type = TokenType.NATURAL;
-                }
-                else
-                {
-                    token.Type = TokenType.INTEGER;
-                }
-            }
-            else
-            {
-                token.Value = "Programul nu recunoaste acest tip de input!";
-                token.Length = 0;
-                token.Type = TokenType.INVALID;
-            }
-            return token;
-        }
         public void Analyze(string content)
         {
             readNextCharacter();
@@ -636,5 +580,6 @@ namespace Nube.LexicalAnalysis
                 }
             }
         }
+        #endregion
     }
 }
