@@ -89,6 +89,7 @@
         REAL,
         NATURAL,
         CHAR,
+        CONST,
         #endregion
 
         #region Extra

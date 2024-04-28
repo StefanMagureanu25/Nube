@@ -1,14 +1,13 @@
-﻿using System.Linq.Expressions;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Nube.LexicalAnalysis
 {
     public class Lexer
     {
         #region Properties & Constructors
-        private static Dictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>();
+        private static readonly Dictionary<string, TokenType> _keywords = [];
         private bool isComment = false;
-        public string Content { get; set; }
+        public string? Content { get; set; }
         //Position where the finite automata(lexer) is situated
         public int Position { get; set; }
         //Actual position for the character we read
@@ -55,6 +54,7 @@ namespace Nube.LexicalAnalysis
         #region Extra methods for defining my tokens' rules
         private void addKeywords()
         {
+            _keywords.Add("const", TokenType.CONST);
             _keywords.Add("string", TokenType.STRING);
             _keywords.Add("boolean", TokenType.BOOLEAN);
             _keywords.Add("integer", TokenType.INTEGER);
