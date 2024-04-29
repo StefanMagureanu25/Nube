@@ -2,46 +2,37 @@
 
 namespace Nube.LexicalAnalysis
 {
-    public class Lexer
+    public static class Lexer
     {
         #region Properties & Constructors
+        public static List<Token> Tokens = new List<Token>();
         private static readonly Dictionary<string, TokenType> _keywords = [];
-        private bool isComment = false;
-        public string? Content { get; set; }
+        private static bool isComment = false;
+        public static string? Content { get; set; }
         //Position where the finite automata(lexer) is situated
-        public int Position { get; set; }
+        public static int Position { get; set; } = -1;
         //Actual position for the character we read
-        public int NextPosition { get; set; }
-        public char Symbol { get; set; }
-        public int Line { get; set; } = 1;
-        public Lexer(string content)
-        {
-            Content = content;
-        }
-        public Lexer()
-        {
-            Position = -1;
-            NextPosition = 0;
-            addKeywords();
-        }
+        public static int NextPosition { get; set; } = 0;
+        public static char Symbol { get; set; }
+        public static int Line { get; set; } = 1;
         #endregion
 
         #region Helpful methods for finite state automaton traversal
-        public void ResetPosition()
+        public static void ResetPosition()
         {
             Position = -1;
             NextPosition = 0;
         }
-        public void AddLine()
+        public static void AddLine()
         {
             Line++;
         }
-        public void NextLine()
+        public static void NextLine()
         {
             ResetPosition();
             AddLine();
         }
-        private bool stepOver(char c)
+        private static bool stepOver(char c)
         {
             if (c == '\n' || c == '\0' || c == '\t' || c == ' ' || c == '\r')
             {
@@ -52,7 +43,7 @@ namespace Nube.LexicalAnalysis
         #endregion
 
         #region Extra methods for defining my tokens' rules
-        private void addKeywords()
+        private static void addKeywords()
         {
             _keywords.Add("const", TokenType.CONST);
             _keywords.Add("string", TokenType.STRING);
@@ -83,7 +74,7 @@ namespace Nube.LexicalAnalysis
 
             _keywords.Add("return", TokenType.RETURN);
         }
-        private TokenType checkKeyword(string value)
+        private static TokenType checkKeyword(string value)
         {
             TokenType tokenType;
             if (_keywords.TryGetValue(value, out tokenType))
@@ -103,29 +94,30 @@ namespace Nube.LexicalAnalysis
             }
             return tokenType;
         }
-        private bool isDigit(char ch)
+        private static bool isDigit(char ch)
         {
             return ch >= '0' && ch <= '9';
         }
-        private bool isLetter(char ch)
+        private static bool isLetter(char ch)
         {
             return (ch == '_') || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
         }
-        private bool isAlphaNumeric(char ch)
+        private static bool isAlphaNumeric(char ch)
         {
             return isDigit(ch) || isLetter(ch);
         }
         #endregion
 
         #region Token recognition
-        private Token takeString()
+        private static Token takeString()
         {
             Token token = new Token();
+            string tokenTemp = token.Value.ToString();
             bool acceptedString = false;
             // check until EOF
             while (Symbol != (char)0)
             {
-                token.Value += Symbol;
+                tokenTemp += Symbol;
                 readNextCharacter();
                 if (Symbol == '"')
                 {
@@ -137,21 +129,24 @@ namespace Nube.LexicalAnalysis
             }
             if (acceptedString)
             {
-                token.Length = token.Value.Length;
+                token.Value = tokenTemp;
+                token.Length = token.Value.ToString().Length;
                 token.Type = TokenType.STRING;
             }
             return token;
         }
-        private Token takeChar()
+        private static Token takeChar()
         {
             Token token = new Token();
+            string tokenTemp = token.Value.ToString();
             bool acceptedChar = false;
             while (Symbol != (char)0)
             {
-                token.Value += Symbol;
-                if (token.Value.Length > 1)
+                tokenTemp += Symbol;
+                if (token.Value.ToString().Length > 1)
                 {
                     // Char can't have length bigger than 1
+                    token.Value = tokenTemp;
                     break;
                 }
                 readNextCharacter();
@@ -165,12 +160,12 @@ namespace Nube.LexicalAnalysis
             }
             if (acceptedChar)
             {
-                token.Length = token.Value.Length;
+                token.Length = token.Value.ToString().Length;
                 token.Type = TokenType.CHAR;
             }
             return token;
         }
-        private void consumeComment()
+        private static void consumeComment()
         {
             // single line comment
             if (Symbol == '/')
@@ -199,19 +194,21 @@ namespace Nube.LexicalAnalysis
                 }
             }
         }
-        private Token checkTokenType()
+        private static Token checkTokenType()
         {
             Token token = new Token();
+            string tokenTemp = token.Value.ToString();
             while (isAlphaNumeric(Symbol))
             {
-                token.Value += Symbol;
+                tokenTemp += Symbol;
                 readNextCharacter();
             }
-            token.Length = token.Value.Length;
-            token.Type = checkKeyword(token.Value);
+            token.Value = tokenTemp;
+            token.Length = token.Value.ToString().Length;
+            token.Type = checkKeyword(token.Value.ToString());
             return token;
         }
-        private Token checkNumber()
+        private static Token checkNumber()
         {
             Token token = new Token();
             string value = "";
@@ -236,22 +233,25 @@ namespace Nube.LexicalAnalysis
                 {
                     Symbol = Content[Position];
                 }
-                if (token.Value.Contains(".") || token.Value.Contains("e") || token.Value.Contains("E"))
+                if (token.Value.ToString().Contains(".") || token.Value.ToString().Contains("e") || token.Value.ToString().Contains("E"))
                 {
                     token.Type = TokenType.REAL;
+                    Tokens.Add(new Token(token.Type, Convert.ToDouble(token.Value), token.Value.ToString().Length, Line, Position));
                 }
-                else if (token.Value.Contains("-") == false)
+                else if (token.Value.ToString().Contains("-") == false)
                 {
                     token.Type = TokenType.NATURAL;
+                    Tokens.Add(new Token(token.Type, Convert.ToUInt32(token.Value), token.Value.ToString().Length, Line, Position));
                 }
                 else
                 {
                     token.Type = TokenType.INTEGER;
+                    Tokens.Add(new Token(token.Type, Convert.ToInt32(token.Value), token.Value.ToString().Length, Line, Position));
                 }
             }
             else
             {
-                token.Value = "Programul nu recunoaste acest tip de input!";
+                token.Value = null;
                 token.Length = 0;
                 token.Type = TokenType.INVALID;
             }
@@ -260,7 +260,7 @@ namespace Nube.LexicalAnalysis
         #endregion
 
         #region Automaton traversal
-        private void readNextCharacter()
+        private static void readNextCharacter()
         {
             if (NextPosition >= Content.Length)
             {
@@ -273,7 +273,7 @@ namespace Nube.LexicalAnalysis
             Position = NextPosition;
             NextPosition++;
         }
-        private Token? NextToken()
+        private static Token? NextToken()
         {
             if (isComment == true)
             {
@@ -558,13 +558,17 @@ namespace Nube.LexicalAnalysis
             }
             if (token.Value != null)
             {
-                token.Position = Position - token.Value.Length + 1;
+                token.Position = Position - token.Value.ToString().Length + 1;
                 token.Line = Line;
             }
             return token;
         }
-        public void Analyze(string content)
+        public static void Analyze(string content)
         {
+            if (Line == 1 && NextPosition == 0)
+            {
+                addKeywords();
+            }
             readNextCharacter();
             while (Symbol != (char)0)
             {
@@ -574,9 +578,9 @@ namespace Nube.LexicalAnalysis
                     continue;
                 }
                 Token token = NextToken();
-                if (token != null)
+                if (token != null && token.Type != TokenType.NATURAL && token.Type != TokenType.REAL && token.Type != TokenType.INTEGER)
                 {
-                    Console.WriteLine(token.ToString());
+                    Tokens.Add(token);
                 }
             }
         }

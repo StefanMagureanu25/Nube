@@ -4,7 +4,7 @@ namespace Nube.LexicalAnalysis
     public class Token
     {
         public TokenType Type { get; set; }
-        public string Value { get; set; }
+        public Object Value { get; set; }
         public int Length { get; set; }
         public int Position { get; set; }
         public int Line { get; set; }
@@ -17,7 +17,7 @@ namespace Nube.LexicalAnalysis
             Value = "";
             Type = TokenType.INVALID;
         }
-        public Token(TokenType type, string value, int length, int position, int line)
+        public Token(TokenType type, Object value, int length, int line, int position)
         {
             Type = type;
             Value = value;
@@ -26,7 +26,7 @@ namespace Nube.LexicalAnalysis
             Line = line;
         }
 
-        public void Deconstruct(out TokenType type, out string value, out int length, out int line, out int position)
+        public void Deconstruct(out TokenType type, out Object value, out int length, out int line, out int position)
         {
             type = Type;
             value = Value;
@@ -36,7 +36,11 @@ namespace Nube.LexicalAnalysis
         }
         public override string ToString()
         {
-            return $"{Type}:'{Value}' with length {Length} at line {Line}, position {Position}";
+            if (Value == null)
+            {
+                return $"{Type}:'{Value}' with length {Length} at line {Line}, position {Position}";
+            }
+            return $"{Type}:'{Value}', {Value.GetType()} with length {Length} at line {Line}, position {Position}";
         }
     }
 }

@@ -11,7 +11,8 @@ public class AstPrinter : IVisitor<string>
     }
     public string visitBinaryExpression(Binary expression)
     {
-        return outputFormat(expression.Operator.Value, new List<Expression> { expression.Expr_left, expression.Expr_right });
+        throw new NotImplementedException();
+        //return outputFormat(expression.Operator.Value, new List<Expression> { expression.Expr_left, expression.Expr_right });
     }
     public string visitAssignExpression(Assign expression)
     {
@@ -19,7 +20,8 @@ public class AstPrinter : IVisitor<string>
     }
     public string visitUnaryExpression(Unary expression)
     {
-        return outputFormat(expression.Operator.Value, new List<Expression> { expression.Expr_right });
+        throw new NotImplementedException();
+        //return outputFormat(expression.Operator.Value, new List<Expression> { expression.Expr_right });
     }
     public string? visitLiteralExpression(Literal expression)
     {

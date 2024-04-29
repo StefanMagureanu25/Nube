@@ -1,17 +1,19 @@
 ﻿using Nube.Errors;
 using Nube.LexicalAnalysis;
 using Nube.Syntactic_Analysis.VisitorPattern;
+using System.Formats.Asn1;
 using static Nube.Syntactic_Analysis.Expression;
 
 namespace Nube.Syntactic_Analysis.Interpreter
 {
     public class Interpreter : IVisitor<object>
     {
-        void interpret(Expression expression)
+        public void interpret(Expression expression)
         {
             try
             {
-                Object 
+                Object value = eval(expression);
+                Console.WriteLine(value.ToString());
             }
             catch (RuntimeError ex)
             {
@@ -20,23 +22,43 @@ namespace Nube.Syntactic_Analysis.Interpreter
         }
         public object visitBinaryExpression(Binary expression)
         {
-            var lhs = reevaluate(expression.Expr_left);
-            var rhs = reevaluate(expression.Expr_right);
+            var lhs = eval(expression.Expr_left);
+            var rhs = eval(expression.Expr_right);
             switch (expression.Operator.Type)
             {
                 case TokenType.PLUS:
                     {
-                        if (lhs is int && lhs is int)
+                        if (lhs is uint && rhs is uint)
+                        {
+                            return (uint)lhs + (uint)rhs;
+                        }
+                        if (lhs is uint && rhs is int)
+                        {
+                            return (uint)lhs + (int)rhs;
+                        }
+                        else if (lhs is uint && rhs is double)
+                        {
+                            return (uint)lhs + (double)rhs;
+                        }
+                        else if (lhs is int && rhs is uint)
+                        {
+                            return (int)lhs + (uint)rhs;
+                        }
+                        else if (lhs is double && rhs is uint)
+                        {
+                            return (double)lhs + (uint)rhs;
+                        }
+                        if (lhs is int && rhs is int)
                         {
                             return (int)lhs + (int)rhs;
                         }
-                        else if ((lhs is int && rhs is double) || (lhs is double && rhs is int))
+                        else if (lhs is int && rhs is double)
                         {
-                            return (double)lhs + (double)rhs;
+                            return (int)lhs + (double)rhs;
                         }
-                        else if (lhs is double && rhs is double)
+                        else if (lhs is double && rhs is int)
                         {
-                            return (double)lhs + (double)rhs;
+                            return (double)lhs + (int)rhs;
                         }
                         else if (lhs is string && rhs is string)
                         {
@@ -46,13 +68,37 @@ namespace Nube.Syntactic_Analysis.Interpreter
                     }
                 case TokenType.MINUS:
                     {
-                        if (lhs is int && lhs is int)
+                        if (lhs is uint && rhs is uint)
+                        {
+                            return (uint)lhs - (uint)rhs;
+                        }
+                        if (lhs is uint && rhs is int)
+                        {
+                            return (uint)lhs - (int)rhs;
+                        }
+                        else if (lhs is uint && rhs is double)
+                        {
+                            return (uint)lhs - (double)rhs;
+                        }
+                        else if (lhs is int && rhs is uint)
+                        {
+                            return (int)lhs - (uint)rhs;
+                        }
+                        else if (lhs is double && rhs is uint)
+                        {
+                            return (double)lhs - (uint)rhs;
+                        }
+                        if (lhs is int && rhs is int)
                         {
                             return (int)lhs - (int)rhs;
                         }
-                        else if ((lhs is int && rhs is double) || (lhs is double && rhs is int))
+                        else if (lhs is int && rhs is double)
                         {
-                            return (double)lhs - (double)rhs;
+                            return (int)lhs - (double)rhs;
+                        }
+                        else if (lhs is double && rhs is int)
+                        {
+                            return (double)lhs - (int)rhs;
                         }
                         else if (lhs is double && rhs is double)
                         {
@@ -62,13 +108,37 @@ namespace Nube.Syntactic_Analysis.Interpreter
                     }
                 case TokenType.MULTIPLY:
                     {
-                        if (lhs is int && lhs is int)
+                        if (lhs is uint && rhs is uint)
+                        {
+                            return (uint)lhs * (uint)rhs;
+                        }
+                        if (lhs is uint && rhs is int)
+                        {
+                            return (uint)lhs * (int)rhs;
+                        }
+                        else if (lhs is uint && rhs is double)
+                        {
+                            return (uint)lhs * (double)rhs;
+                        }
+                        else if (lhs is int && rhs is uint)
+                        {
+                            return (int)lhs * (uint)rhs;
+                        }
+                        else if (lhs is double && rhs is uint)
+                        {
+                            return (double)lhs * (uint)rhs;
+                        }
+                        if (lhs is int && rhs is int)
                         {
                             return (int)lhs * (int)rhs;
                         }
-                        else if ((lhs is int && rhs is double) || (lhs is double && rhs is int))
+                        else if (lhs is int && rhs is double)
                         {
-                            return (double)lhs * (double)rhs;
+                            return (int)lhs * (double)rhs;
+                        }
+                        else if (lhs is double && rhs is int)
+                        {
+                            return (double)lhs * (int)rhs;
                         }
                         else if (lhs is double && rhs is double)
                         {
@@ -78,13 +148,37 @@ namespace Nube.Syntactic_Analysis.Interpreter
                     }
                 case TokenType.DIVIDE:
                     {
-                        if (lhs is int && lhs is int)
+                        if (lhs is uint && rhs is uint)
+                        {
+                            return (uint)lhs / (uint)rhs;
+                        }
+                        if (lhs is uint && rhs is int)
+                        {
+                            return (uint)lhs / (uint)rhs;
+                        }
+                        else if (lhs is uint && rhs is double)
+                        {
+                            return (uint)lhs / (double)rhs;
+                        }
+                        else if (lhs is int && rhs is uint)
+                        {
+                            return (int)lhs / (uint)rhs;
+                        }
+                        else if (lhs is double && rhs is uint)
+                        {
+                            return (double)lhs / (uint)rhs;
+                        }
+                        if (lhs is int && rhs is int)
                         {
                             return (int)lhs / (int)rhs;
                         }
-                        else if ((lhs is int && rhs is double) || (lhs is double && rhs is int))
+                        else if (lhs is int && rhs is double)
                         {
-                            return (double)lhs / (double)rhs;
+                            return (int)lhs / (double)rhs;
+                        }
+                        else if (lhs is double && rhs is int)
+                        {
+                            return (double)lhs / (int)rhs;
                         }
                         else if (lhs is double && rhs is double)
                         {
@@ -119,7 +213,7 @@ namespace Nube.Syntactic_Analysis.Interpreter
         }
         public object visitUnaryExpression(Unary expression)
         {
-            var rhs = reevaluate(expression.Expr_right);
+            var rhs = eval(expression.Expr_right);
             return rhs;
         }
         public object visitLiteralExpression(Literal expression)
@@ -128,7 +222,7 @@ namespace Nube.Syntactic_Analysis.Interpreter
         }
         public object visitGroupingExpression(Grouping expression)
         {
-            return reevaluate(expression.Expression);
+            return eval(expression.Expression);
         }
         private bool isEqual(Object lhs, Object rhs)
         {
@@ -142,7 +236,7 @@ namespace Nube.Syntactic_Analysis.Interpreter
             }
             return lhs.Equals(rhs);
         }
-        private object reevaluate(Expression expression)
+        private object eval(Expression expression)
         {
             return expression.Accept(this);
         }

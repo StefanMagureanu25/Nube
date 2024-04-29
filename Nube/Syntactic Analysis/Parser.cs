@@ -85,7 +85,7 @@ namespace Nube.Syntactic_Analysis
             }
             return false;
         }
-        private Expression parse()
+        public Expression parse()
         {
             try
             {
@@ -177,10 +177,10 @@ namespace Nube.Syntactic_Analysis
             {
                 return new Expression.Literal(previous().Value);
             }
-            if (matchTokenType(new List<TokenType> { TokenType.LBRACE }))
+            if (matchTokenType(new List<TokenType> { TokenType.LPAREN }))
             {
                 Expression _expression = expression();
-                if (peek().Type != TokenType.RBRACE)
+                if (peek().Type != TokenType.RPAREN)
                 {
                     // eroare, pentru ca noi asteptam o paranteza ')'
                 }
