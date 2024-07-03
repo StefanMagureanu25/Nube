@@ -1,10 +1,10 @@
-﻿
-namespace Nube.LexicalAnalysis
+﻿namespace Nube.LexicalAnalysis
 {
     public class Token
     {
+        #region Properties & Constructors
         public TokenType Type { get; set; }
-        public Object Value { get; set; } // lexeme
+        public Object Value { get; set; } // Lexeme
         public int Length { get; set; }
         public int Position { get; set; }
         public int Line { get; set; }
@@ -25,7 +25,9 @@ namespace Nube.LexicalAnalysis
             Position = position;
             Line = line;
         }
+        #endregion
 
+        #region Deconstruct & Way of printing
         public void Deconstruct(out TokenType type, out Object value, out int length, out int line, out int position)
         {
             type = Type;
@@ -42,5 +44,6 @@ namespace Nube.LexicalAnalysis
             }
             return $"{Type}:'{Value}', {Value.GetType()} with length {Length} at line {Line}, position {Position}";
         }
+        #endregion
     }
 }

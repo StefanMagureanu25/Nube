@@ -10,5 +10,6 @@ namespace Nube.Syntactic_Analysis.VisitorPattern
         T visitBlockStatement(Block block);
         T visitIfStatement(If _if);
         T visitWhileStatement(While _while);
+        T visitForStatement(For _for);
     }
 }

@@ -1,0 +1,20 @@
+﻿{
+	a :: var = "test";
+	print a;
+
+	b :: var = "licenta";
+
+	{
+		b :: var = "licenta2";
+		{
+			b :: var = "licenta3";
+			a :: var = "test2";
+			print b;
+			print a;
+		}
+		print a;
+		print b;
+	}
+	print b;
+	print a;
+}

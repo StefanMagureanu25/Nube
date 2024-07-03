@@ -1,9 +1,11 @@
-﻿namespace Nube.Typo_Correction
+﻿using Nube.LexicalAnalysis;
+
+namespace Nube.Typo_Correction
 {
     public class LevenshteinAutomaton
     {
         private readonly string inputWord;
-        private readonly int editDistance;
+        private readonly int editDistance = 2;
         private readonly int[] firstRow;
         public LevenshteinAutomaton(string inputWord, int editDistance)
         {
@@ -11,8 +13,10 @@
             this.editDistance = editDistance;
             this.firstRow = Enumerable.Range(0, inputWord.Length + 1).ToArray();
         }
-
-        public LevenshteinAutomaton() { }
+        public LevenshteinAutomaton()
+        {
+            this.editDistance = editDistance;
+        }
 
         public LevenshteinAutomaton(int editDistance)
         {
@@ -50,6 +54,30 @@
         public bool CanMatch(int[] row)
         {
             return row.Min() <= editDistance;
+        }
+        public object CanEdit(string word, List<string> elements)
+        {
+            bool canMatch = true;
+            var automaton = new LevenshteinAutomaton(word, editDistance);
+            foreach (var keyword in elements)
+            {
+                int[] state = automaton.Start();
+                canMatch = true;
+                foreach (char c in keyword)
+                {
+                    state = automaton.Step(state, c);
+                    if (!automaton.CanMatch(state))
+                    {
+                        canMatch = false;
+                        break;
+                    }
+                }
+                if (canMatch && automaton.IsMatch(state))
+                {
+                    return keyword;
+                }
+            }
+            return null;
         }
     }
 }

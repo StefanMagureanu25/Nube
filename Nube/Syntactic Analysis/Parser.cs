@@ -7,15 +7,13 @@ namespace Nube.Syntactic_Analysis
     public class Parser
     {
         #region Parser properties
-        public LevenshteinAutomaton LevenshteinAutomaton { get; set; }
+        public LevenshteinAutomaton LevenshteinAutomaton { get; set; } = new LevenshteinAutomaton();
         public List<Token> Tokens { get; }
-        public int EditDistance { get; set; }
         public int CurrentPosition { get; set; }
         public Parser(List<Token> tokens)
         {
             Tokens = tokens;
             CurrentPosition = 0;
-            EditDistance = 2;
         }
         #endregion
 
@@ -147,14 +145,31 @@ namespace Nube.Syntactic_Analysis
                 checkError(TokenType.EQUAL, "Expect '=' in assigning a value");
                 value = expression();
             }
-
-            checkError(TokenType.SEMICOLON, "Expect ; at the end of variable !");
+            else
+            {
+                List<string> elements = new List<string> { "var", "string", "integer", "boolean", "natural", "real", "char" };
+                object wordModified = LevenshteinAutomaton.CanEdit(peek().Value.ToString(), elements);
+                if (wordModified != null)
+                {
+                    Console.WriteLine($"WARNING: You wrote {peek().Value} instead of {wordModified}." +
+                        $" It will be modified automatically!");
+                    peek().Value = wordModified;
+                    readNextToken();
+                    checkError(TokenType.EQUAL, "Expect '=' in assigning a value");
+                    value = expression();
+                }
+                else
+                {
+                    throw new ParseError(peek(), $"There is no type of {peek().Value}");
+                }
+            }
+            checkError(TokenType.SEMICOLON, $"Expect ; at the end of variable on line {variableName.Line}!");
             return new Statement.Var(variableName, value);
         }
         #endregion
         /*
             Statements grammar:
-                statements -> printStatement | expressionStatement
+                statements -> printStatement | expressionStatement | forStatement | whileStatement | ifStatement
          */
         #region Statements Region 
         private Statement statement()
@@ -163,6 +178,18 @@ namespace Nube.Syntactic_Analysis
             {
                 readNextToken();
                 return printStatement();
+            }
+            else
+            {
+                List<string> elements = new List<string> { "print" };
+                object wordModified = LevenshteinAutomaton.CanEdit(peek().Value.ToString(), elements);
+                if (wordModified != null)
+                {
+                    Console.WriteLine($"WARNING: You wrote {peek().Value} instead of {wordModified}." +
+                        $" It will be modified automatically!");
+                    readNextToken();
+                    return printStatement();
+                }
             }
             if (checkToken(TokenType.IF))
             {
@@ -173,6 +200,18 @@ namespace Nube.Syntactic_Analysis
             {
                 readNextToken();
                 return whileStatement();
+            }
+            else
+            {
+                List<string> elements = new List<string> { "while" };
+                object wordModified = LevenshteinAutomaton.CanEdit(peek().Value.ToString(), elements);
+                if (wordModified != null)
+                {
+                    Console.WriteLine($"WARNING: You wrote {peek().Value} instead of {wordModified}." +
+                        $" It will be modified automatically!");
+                    readNextToken();
+                    return whileStatement();
+                }
             }
             if (checkToken(TokenType.FOR))
             {
@@ -190,7 +229,7 @@ namespace Nube.Syntactic_Analysis
         private Statement printStatement()
         {
             Expression expr = expression();
-            checkError(TokenType.SEMICOLON, "Expect ; after value.");
+            checkError(TokenType.SEMICOLON, $"Expect ; after value");
             return new Statement.Print(expr);
         }
 
@@ -215,9 +254,7 @@ namespace Nube.Syntactic_Analysis
 
         private Statement ifStatement()
         {
-            //checkError(TokenType.LPAREN, "Need to put '(' after if");
             Expression condition = expression();
-            //checkError(TokenType.RPAREN, "Need to put ')' after condition");
             checkError(TokenType.LBRACE, "Need to put '{' after if condition");
             List<Statement> then = block();
             List<Statement> _else = null;
@@ -253,16 +290,13 @@ namespace Nube.Syntactic_Analysis
             Expression condition = null;
             if (!checkToken(TokenType.SEMICOLON))
             {
-                checkError(TokenType.TO, "Expect to in for condition!");
-                checkError(TokenType.LPAREN, "Need to put '(' in for condition for stop value!");
                 condition = expression();
-                checkError(TokenType.RPAREN, "Need to put ')' after condition for stop value!");
             }
             checkError(TokenType.STEP, "Need to put 'step' after right parenthesis in for loop!");
             Expression incrementValue = expression();
             checkError(TokenType.LBRACE, "Need to put '{' after for loop");
             List<Statement> body = block();
-            return null;
+            return new Statement.For(condition, body, declaration, incrementValue);
         }
         #endregion
 

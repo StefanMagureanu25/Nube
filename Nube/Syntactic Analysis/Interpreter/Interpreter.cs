@@ -7,7 +7,10 @@ namespace Nube.Syntactic_Analysis.Interpreter
 {
     public class Interpreter : IExprVisitor<object>, IStmtVisitor<object>
     {
+        #region Properties
         private Semantic_Analysis.Environment _environment = new Semantic_Analysis.Environment();
+        #endregion
+
         #region Evaluate the input
         public void interpret(List<Statement> statements)
         {
@@ -192,6 +195,20 @@ namespace Nube.Syntactic_Analysis.Interpreter
                 {
                     execute(statement);
                 }
+            }
+            return null;
+        }
+
+        public object visitForStatement(Statement.For _for)
+        {
+            execute(_for.Declaration);
+            while (isTrue(eval(_for.Condition)))
+            {
+                foreach (Statement statement in _for.Body)
+                {
+                    execute(statement);
+                }
+                eval(_for.IncrementValue);
             }
             return null;
         }
@@ -421,6 +438,7 @@ namespace Nube.Syntactic_Analysis.Interpreter
         #endregion
         #endregion
 
+        #region Other methods
         private bool isTrue(object value)
         {
             if (value == null)
@@ -433,5 +451,6 @@ namespace Nube.Syntactic_Analysis.Interpreter
             }
             return true;
         }
+        #endregion
     }
 }

@@ -6,7 +6,7 @@ namespace Nube.LexicalAnalysis
     {
         #region Properties & Constructors
         public static List<Token> Tokens = new List<Token>();
-        private static readonly Dictionary<string, TokenType> _keywords = [];
+        public static readonly Dictionary<string, TokenType> _keywords = [];
         private static bool isComment = false;
         public static string? Content { get; set; }
         //Position where the finite automata(lexer) is situated

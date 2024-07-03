@@ -92,5 +92,25 @@ namespace Nube.Syntactic_Analysis
             }
         }
 
+        public class For : Statement
+        {
+            public Expression Condition { get; set; }
+            public List<Statement> Body { get; set; }
+            public Statement Declaration { get; set; }
+            public Expression IncrementValue { get; set; }
+
+            public For(Expression condition, List<Statement> body, Statement declaration, Expression incrementValue)
+            {
+                Condition = condition;
+                Body = body;
+                Declaration = declaration;
+                IncrementValue = incrementValue;
+            }
+            public override T Accept<T>(IStmtVisitor<T> visitor)
+            {
+                return visitor.visitForStatement(this);
+            }
+
+        }
     }
 }

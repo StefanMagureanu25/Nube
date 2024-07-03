@@ -1,0 +1,7 @@
+﻿a :: vra = 12;
+
+whlie a > 6
+{
+	prnit a + 2;
+	a  = a - 2;
+}
