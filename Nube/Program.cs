@@ -11,29 +11,18 @@ namespace Nube
         {
             try
             {
-                using (var file = new StreamReader(@"D:\Nube\Nube\Documentation\test.txt"))
+                using (var file = new StreamReader(@"C:\Nube\Nube\Documentation\input.txt"))
                 {
-                    while ((Lexer.Content = file.ReadLine()) != null)
-                    {
-                        Lexer.Analyze(Lexer.Content);
-                        Lexer.Tokens.Add(new Token(TokenType.EOF, null, 0, Lexer.Line, Lexer.Position + 1));
-                        foreach (Token token in Lexer.Tokens)
-                        {
-                            Console.WriteLine(token.ToString());
-                        }
-                        Parser parser = new Parser(Lexer.Tokens);
-                        Expression expr = parser.parse();
-                        Console.WriteLine($"\nRezultatul operatiei este:");
-                        interpreter.interpret(expr);
-                        Console.WriteLine();
-                        Lexer.NextLine();
-                        // doar pentru testarea operatiilor pe mai multe linii
-                        Lexer.Tokens.Clear();
-                    }
-                    foreach (var token in Lexer.Tokens)
+                    Lexer.Content = file.ReadToEnd();
+                    Lexer.Analyze(Lexer.Content);
+                    Lexer.Tokens.Add(new Token(TokenType.EOF, null, 0, Lexer.Line, Lexer.Position + 1));
+                    /*foreach (Token token in Lexer.Tokens)
                     {
                         Console.WriteLine(token.ToString());
-                    }
+                    }*/
+                    Parser parser = new Parser(Lexer.Tokens);
+                    List<Statement> statements = parser.parse();
+                    interpreter.interpret(statements);
                 }
             }
             catch (FileNotFoundException)
@@ -42,7 +31,7 @@ namespace Nube
             }
             catch (Exception)
             {
-                Console.WriteLine("A intervenit o alta problema in citirea fisierului!");
+
             }
         }
     }

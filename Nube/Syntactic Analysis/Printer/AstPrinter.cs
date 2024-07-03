@@ -3,7 +3,7 @@ using System.Text;
 using static Nube.Syntactic_Analysis.Expression;
 
 namespace Nube.Syntactic_Analysis.Printer;
-public class AstPrinter : IVisitor<string>
+public class AstPrinter : IExprVisitor<string>
 {
     public string Print(Expression expression)
     {
@@ -43,5 +43,15 @@ public class AstPrinter : IVisitor<string>
         }
         stringBuilder.Append(")");
         return stringBuilder.ToString();
+    }
+
+    public string visitVariableExpression(Variable variable)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string visitLogicalExpression(Logical logical)
+    {
+        throw new NotImplementedException();
     }
 }

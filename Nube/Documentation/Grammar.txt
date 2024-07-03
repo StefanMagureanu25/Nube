@@ -1,4 +1,8 @@
-﻿##### Nube lexical grammar ####
+﻿\r\n{\r\na :: var = 5;\r\nb :: var = 6;\r\nprint a + b;\r\n}
+
+
+
+##### Nube lexical grammar ####
 
 expression ->  literal
                | unary
@@ -15,7 +19,6 @@ operator ->  "==" | "!=" | "<" | "<=" | ">" | ">="
 
 NUMBER -> ([\-]?)([1-9])
 STRING -> [\w]+
-
 
 
 

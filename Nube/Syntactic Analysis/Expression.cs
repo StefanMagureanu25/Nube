@@ -7,7 +7,7 @@ namespace Nube.Syntactic_Analysis
     public abstract class Expression
     {
         // abstract method to implement for each particular expression
-        public abstract T Accept<T>(IVisitor<T> visitor);
+        public abstract T Accept<T>(IExprVisitor<T> visitor);
 
         public class Literal : Expression
         {
@@ -16,7 +16,7 @@ namespace Nube.Syntactic_Analysis
             {
                 Value = value;
             }
-            public override T Accept<T>(IVisitor<T> visitor)
+            public override T Accept<T>(IExprVisitor<T> visitor)
             {
                 return visitor.visitLiteralExpression(this);
             }
@@ -33,11 +33,12 @@ namespace Nube.Syntactic_Analysis
                 Operator = _operator;
                 Expr_right = expr_right;
             }
-            public override T Accept<T>(IVisitor<T> visitor)
+            public override T Accept<T>(IExprVisitor<T> visitor)
             {
                 return visitor.visitBinaryExpression(this);
             }
         }
+        // Unary -> Operator Expression
         public class Unary : Expression
         {
             public Token Operator { get; set; }
@@ -47,11 +48,12 @@ namespace Nube.Syntactic_Analysis
                 Operator = _operator;
                 Expr_right = expr_right;
             }
-            public override T Accept<T>(IVisitor<T> visitor)
+            public override T Accept<T>(IExprVisitor<T> visitor)
             {
                 return visitor.visitUnaryExpression(this);
             }
         }
+        // Grouping -> ( Expression )
         public class Grouping : Expression
         {
             public Expression Expression { get; set; }
@@ -59,11 +61,12 @@ namespace Nube.Syntactic_Analysis
             {
                 Expression = expression;
             }
-            public override T Accept<T>(IVisitor<T> visitor)
+            public override T Accept<T>(IExprVisitor<T> visitor)
             {
                 return visitor.visitGroupingExpression(this);
             }
         }
+        // Assign -> Name = Value
         public class Assign : Expression
         {
             public Token Name { get; set; }
@@ -73,11 +76,39 @@ namespace Nube.Syntactic_Analysis
                 Name = name;
                 Value = value;
             }
-            public override T Accept<T>(IVisitor<T> visitor)
+            public override T Accept<T>(IExprVisitor<T> visitor)
             {
                 return visitor.visitAssignExpression(this);
             }
 
+        }
+        public class Variable : Expression
+        {
+            public Token Name { get; set; }
+            public Variable(Token name)
+            {
+                Name = name;
+            }
+            public override T Accept<T>(IExprVisitor<T> visitor)
+            {
+                return visitor.visitVariableExpression(this);
+            }
+        }
+        public class Logical : Expression
+        {
+            public Expression Expr_left { get; set; }
+            public Token Operator { get; set; }
+            public Expression Expr_right { get; set; }
+            public Logical(Expression expr_left, Token _operator, Expression expr_right)
+            {
+                Expr_left = expr_left;
+                Expr_right = expr_right;
+                Operator = _operator;
+            }
+            public override T Accept<T>(IExprVisitor<T> visitor)
+            {
+                return visitor.visitLogicalExpression(this);
+            }
         }
     }
 }

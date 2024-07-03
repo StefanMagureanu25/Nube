@@ -8,6 +8,7 @@
         FN,
         IMPORT,
         IF,
+        ELSE,
         FOR,
         WHILE,
         STOP,
@@ -19,6 +20,7 @@
         TO,
         STEP,
         NULL,
+        PRINT,
         #endregion
 
         #region Delimiters
@@ -90,6 +92,7 @@
         NATURAL,
         CHAR,
         CONST,
+        VAR,
         #endregion
 
         #region Extra

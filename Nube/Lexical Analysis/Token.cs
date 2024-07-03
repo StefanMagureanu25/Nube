@@ -4,7 +4,7 @@ namespace Nube.LexicalAnalysis
     public class Token
     {
         public TokenType Type { get; set; }
-        public Object Value { get; set; }
+        public Object Value { get; set; } // lexeme
         public int Length { get; set; }
         public int Position { get; set; }
         public int Line { get; set; }

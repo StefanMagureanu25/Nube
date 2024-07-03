@@ -13,6 +13,7 @@ namespace Nube.LexicalAnalysis
         public static int Position { get; set; } = -1;
         //Actual position for the character we read
         public static int NextPosition { get; set; } = 0;
+        public static int Index { get; set; } = 0;
         public static char Symbol { get; set; }
         public static int Line { get; set; } = 1;
         #endregion
@@ -34,7 +35,12 @@ namespace Nube.LexicalAnalysis
         }
         private static bool stepOver(char c)
         {
-            if (c == '\n' || c == '\0' || c == '\t' || c == ' ' || c == '\r')
+            if (c == '\n')
+            {
+                NextLine();
+                return true;
+            }
+            else if (c == '\t' || c == ' ' || c == '\r')
             {
                 return true;
             }
@@ -60,6 +66,7 @@ namespace Nube.LexicalAnalysis
             _keywords.Add("import", TokenType.IMPORT);
 
             _keywords.Add("if", TokenType.IF);
+            _keywords.Add("else", TokenType.ELSE);
             _keywords.Add("for", TokenType.FOR);
             _keywords.Add("while", TokenType.WHILE);
 
@@ -73,6 +80,8 @@ namespace Nube.LexicalAnalysis
             _keywords.Add("step", TokenType.STEP);
 
             _keywords.Add("return", TokenType.RETURN);
+            _keywords.Add("print", TokenType.PRINT);
+            _keywords.Add("var", TokenType.VAR);
         }
         private static TokenType checkKeyword(string value)
         {
@@ -215,7 +224,7 @@ namespace Nube.LexicalAnalysis
 
             string numberPattern = @"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?";
 
-            while (Symbol != '\n' && Symbol != ' ' && Symbol != (char)0)
+            while (Symbol != '\n' && Symbol != ' ' && Symbol != (char)0 && Symbol != '\r' && Symbol != ';')
             {
                 value += Symbol;
                 readNextCharacter();
@@ -229,10 +238,7 @@ namespace Nube.LexicalAnalysis
                 // Take the index of the next character after the number
                 Position = Position - value.Length + match.Length;
                 NextPosition = Position + 1;
-                if (Position < Content.Length)
-                {
-                    Symbol = Content[Position];
-                }
+                Index = Index - value.Length + match.Length;
                 if (token.Value.ToString().Contains(".") || token.Value.ToString().Contains("e") || token.Value.ToString().Contains("E"))
                 {
                     token.Type = TokenType.REAL;
@@ -262,15 +268,16 @@ namespace Nube.LexicalAnalysis
         #region Automaton traversal
         private static void readNextCharacter()
         {
-            if (NextPosition >= Content.Length)
+            if (Index >= Content.Length)
             {
                 Symbol = (char)0;
             }
             else
             {
-                Symbol = Content[NextPosition];
+                Symbol = Content[Index];
             }
             Position = NextPosition;
+            Index++;
             NextPosition++;
         }
         private static Token? NextToken()
